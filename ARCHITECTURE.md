@@ -152,10 +152,13 @@ src/
         (unit tests, Storybook tests, etc.)
       index.ts (public API, exports nessesary modules)
 
-    sortFromQueryParam/
+    syncSortQueryParam/
       logic/
         parseQueryParam.ts
+        updateQueryParam.ts
       tests/
+        (unit tests, etc.)
+      index.ts (public API, exports nessesary modules)
 
     handleErrors/
       components/
