@@ -3,6 +3,9 @@
 ## Product Name
 **Olympic Medal Counter**
 
+![image](https://github.com/user-attachments/assets/368adf1d-0fd0-44d1-a581-01e3e1739165)
+
+
 ---
 
 ## Purpose
