@@ -31,7 +31,8 @@ The architecture emphasizes:
 
 ### State Management
 
-Global state is managed via Zustand, with the following shape:
+Global state is managed via Zustand, composed from feature-specific slices. Example shape:
+
 ```ts
 interface MedalStore {
   medals: MedalEntry[];
@@ -48,7 +49,11 @@ interface MedalStore {
 }
 ```
 
-The store exposes domain-specific actions (`sortByGold`, etc.) instead of generic `setSortKey` to keep the UI declarative and domain-agnostic.
+The store exposes domain-specific actions (`sortByGold`, etc.) instead of generic `setSortKey`, this is to:
+
+- Encapsulate domain logic in one place
+- Avoid hardcoding strings in UI
+- Allow future enhancements (analytics, validation, etc.)
 
 ### Derived State
 
@@ -80,6 +85,7 @@ The store exposes domain-specific actions (`sortByGold`, etc.) instead of generi
 ## Data Schema
 
 ### Medal Entry
+
 ```ts
 interface MedalEntry {
   code: string;  // ISO country code, e.g., "USA"
@@ -90,6 +96,7 @@ interface MedalEntry {
 ```
 
 ### Example `medals.json` entry:
+
 ```json
 {
   "code": "USA",
@@ -111,230 +118,170 @@ interface MedalEntry {
 
 ## Folder Structure
 
-```
+```txt
 src/
+  features/
+    viewEntrants/
+      components/
+        EntrantRow.tsx
+        MedalTableBody.tsx
+      logic/
+        entrantsSlice.ts
+      tests/
+
+    sortEntrants/
+      components/
+        MedalTableHeader.tsx
+        SortButton.tsx
+        SortByGoldButton.tsx
+        SortBySilverButton.tsx
+        SortByBronzeButton.tsx
+        SortByTotalButton.tsx
+      logic/
+        sortSlice.ts
+        sortMedals.ts
+        useSortedMedals.ts
+      tests/
+
+    sortFromQueryParam/
+      logic/
+        parseQueryParam.ts
+      tests/
+
+    handleErrors/
+      components/
+        ErrorFeedback.tsx
+      logic/
+        errorSlice.ts
+      tests/
+
+  shared/
+    components/
+      AppTitle.tsx
+      Flag.tsx
+    store/
+      useMedalStore.ts
+    types/
+      MedalEntry.ts
+    styles/
+      tailwind.css
+
+  initApp.ts
   App.tsx
   main.tsx
-  initApp.ts
-
-  components/
-    AppTitle.tsx
-    MedalTableHeader.tsx
-    MedalTableBody.tsx
-    EntrantRow.tsx
-    Flag.tsx
-    ErrorFeedback.tsx
-    SortByGoldButton.tsx
-    SortBySilverButton.tsx
-    SortByBronzeButton.tsx
-    SortByTotalButton.tsx
-    common/
-      SortButton.tsx
-
-  store/
-    useMedalStore.ts
-
-  hooks/
-    useSortedMedals.ts
-
-  utils/
-    sortMedals.ts
 ```
 
 ---
 
-## Component & File Responsibilities
+## Directory Structure Rationale
 
-### Application Shell
+This project originally followed a flat structure, but was refactored to adopt a **feature-based architecture**. This change was made to reflect how real-world applications scale and how features evolve independently.
 
-#### `main.tsx`
-- Entry point
-- Calls `initApp()`
-- Mounts `<App />` into the DOM
+### Why the Change?
 
-#### `App.tsx`
-- Root React component tree
-- Composes UI layout
-- Renders child components
+- As the app grew, it became clear that grouping files by technical type (e.g. `components/`, `store/`, `utils/`) caused friction when working feature-by-feature.
+- Instead, a feature-based layout keeps all related logic (state, UI, tests) together, reducing context switching.
+- It reflects how the GitHub issues and workstreams are organized — by feature/epic — allowing for atomic PRs and iterative development.
 
-#### `initApp.ts`
-- Reads & validates URL param
-- Fetches `medals.json`
-- Seeds store with `medals`, `sortKey`, and errors (if any)
+### Benefits of Feature-Based Structure
 
----
+- **Domain-Driven Separation**  
+  Each feature (e.g. viewing entrants, sorting, error handling) has its own folder containing components, logic, and tests. This reflects product requirements and epics directly.
 
-### Presentational Components
+- **Scalable and Maintainable**  
+  New features can be added with minimal risk of entanglement. Logic is easier to refactor in isolation.
 
-#### `components/AppTitle.tsx`
-- Renders application title
+- **Encapsulation**  
+  Business logic is colocated with its UI and tests. No need to jump between folders to understand how a feature works.
 
-#### `components/MedalTableHeader.tsx`
-- Renders `<thead>` with 4 `SortByXButton` components
+- **Improved Traceability**  
+  Easy to track changes and map functionality to business requirements.
 
-#### `components/MedalTableBody.tsx`
-- Renders `<tbody>` with sorted rows
-- Uses `useSortedMedals()`
+- **Composable Store**  
+  Zustand slices are defined per feature and composed in `shared/store/useMedalStore.ts`, maintaining a unified global state with clear feature ownership.
 
-#### `components/EntrantRow.tsx`
-- Renders a single entrant’s row with flag and medals
-
-#### `components/Flag.tsx`
-- Renders country flag based on `code` prop
-
-#### `components/ErrorFeedback.tsx`
-- Displays error banner if `store.error` is set
-- Includes reload button
+- **Declarative UI**  
+  Business logic like sorting and query param parsing is outside the React tree. Components remain pure and render declaratively.
 
 ---
 
-### Sort Buttons
+## Testing Strategy
 
-#### `components/SortByGoldButton.tsx`
-#### `components/SortBySilverButton.tsx`
-#### `components/SortByBronzeButton.tsx`
-#### `components/SortByTotalButton.tsx`
-- Domain-aware wrappers around `SortButton`
-- Subscribe to `sortKey`
-- Call appropriate `store.sortByX()` action
-- Pass props to `SortButton`
-
-#### `components/common/SortButton.tsx`
-- Pure, reusable presentational button
-- Accepts `sortKey`, `active`, `onClick` props
-- Maps `sortKey` to label and color internally
-
----
-
-### Business Logic
-
-#### `store/useMedalStore.ts`
-- Holds `medals`, `sortKey`, and `error`
-- Provides actions:
-  - `setMedals()`, `setError()`
-  - `sortByGold()`, `sortBySilver()`, etc.
-
-#### `hooks/useSortedMedals.ts`
-- Derived state
-- Uses `medals` + `sortKey` to return sorted data
-
-#### `utils/sortMedals.ts`
-- Pure sorting utility
-- Accepts `medals` + `sortKey` and returns sorted array
-
----
-
-## Store Actions
-
-The store exposes domain-specific actions to keep the UI declarative:
-```ts
-sortByGold: () => set({ sortKey: 'gold' }),
-sortBySilver: () => set({ sortKey: 'silver' }),
-sortByBronze: () => set({ sortKey: 'bronze' }),
-sortByTotal: () => set({ sortKey: 'total' })
-```
-
-These:
-- Encapsulate domain logic in one place
-- Avoid hardcoding strings in UI
-- Allow future enhancements (analytics, validation, etc.)
-
----
-
-## Notes on Patterns
-
-- Business logic (URL parsing, data fetch, sorting rules) lives outside React.
-- Zustand is the single source of truth.
-- React components are declarative and presentational only.
-- Sorting logic is isolated in `sortMedals()` for testability.
-- Derived state encapsulated in selector hook.
-
----
-
-## Testing
-
-Testing will be implemented across three layers:
+Testing is performed at multiple layers:
 
 ### 1. Unit Testing (with Jest)
-- Pure logic functions like `sortMedals()` will be covered with unit tests.
-- Edge cases such as tie-breaking and empty arrays will be validated.
+- Pure logic functions (e.g. `sortMedals`) are tested in isolation.
+- Edge cases like tie-breaking and invalid inputs are covered.
 
 ### 2. Component Testing (with Storybook Test Runner)
-- Pure presentational components will be tested in isolation using Storybook’s test runner.
-- Snapshot tests, interaction tests, and accessibility checks will ensure UI correctness.
-- Stories serve both documentation and test surface.
+- Presentational components are tested in isolation.
+- Includes snapshot tests, interaction testing, and accessibility checks.
 
 ### 3. End-to-End Testing (with Cypress)
-- Full user journeys will be tested via Cypress.
-- Ensures data flow from store → components → UI behaves as expected.
-- Covers interactions (e.g. clicking sort buttons), error states, and URL param parsing.
+- Simulates real user interactions across the full stack.
+- Covers navigation, sort selection, error handling, and URL param behavior.
 
 ---
 
 ## Rationale
 
-This project makes intentional, opinionated choices to support maintainability, performance, and developer clarity. Below are the core decisions and tradeoffs:
+This project makes intentional, opinionated choices to support maintainability, performance, and developer clarity.
 
----
+### Why Zustand?
 
-### State Management: Why Zustand?
+- Minimal boilerplate compared to useReducer + Context or Redux.
+- Fine-grained subscriptions reduce unnecessary re-renders.
+- Store lives outside React tree for separation of concerns.
+- Domain-specific actions like `sortByGold()` keep logic abstracted.
+- Redux and MobX offer more power but add unnecessary complexity for this scope.
 
-- **Minimal boilerplate** compared to `useReducer` + Context or Redux.
-- **Fine-grained subscriptions** reduce unnecessary re-renders.
-- **Encourages separation of concerns** — store lives outside the React tree.
-- Domain-specific actions like `sortByGold()` keep business logic abstracted from the UI.
-- Zustand scales well without introducing complexity or opinionated structure.
-- Redux and MobX are more powerful, but overkill for this domain with added complexity.
+### Why Native URL API over React Router?
 
----
+- Only one query param (`?sort=`), no route nesting required.
+- `URLSearchParams` and `history.replaceState` are stable and explicit.
+- Avoids extra dependency and context setup.
 
-### Routing: Why native URL API over React Router?
+### Why Vite instead of Next.js?
 
-- The app uses a **single `?sort=` param** — no pages or nested routing.
-- Avoids pulling in the full Router dependency and context setup.
-- Keeps routing logic **explicit and tightly scoped** to initialization and state syncing.
-- Native APIs like `URLSearchParams` and `history.replaceState` are sufficient and stable.
-
----
-
-### App Framework: Why Vite instead of Next.js?
-
-- No SSR, dynamic routing, or API layer required — **Next.js adds complexity** we don’t need.
-- Vite offers:
-  - **Faster dev server startup**
-  - **Hot module reload**
-  - **Simpler config**
-- Ideal for fast single-page-app prototyping and production delivery.
-
----
-
-### Component Architecture
-
-- **Business logic lives outside of React**, preserving declarative rendering in components.
-- Components are **pure and presentational**, with props only — no internal state or side effects.
-- **Derived state is computed via hooks** like `useSortedMedals()` and utilities like `sortMedals()`.
-- **Explicit, domain-specific actions** (`sortByGold`, etc.) avoid passing string literals or keys throughout the UI.
-- Results in **testable**, **composable**, and **readable** component logic.
-
----
+- No need for SSR, routing, or API routes.
+- Vite provides faster builds and simpler config.
+- Ideal for single-page app prototyping and deployment.
 
 ### Why Storybook?
 
-- Enables **isolated development** and documentation of UI components.
-- Supports **visual testing, accessibility checks, and interaction testing**.
-- Facilitates team collaboration and stakeholder review without launching the app.
-- Encourages **component-driven architecture** and reuse.
+- Enables isolated UI development and documentation.
+- Encourages component reuse and visual regression testing.
+- Supports interaction testing and a11y checks.
+
+- ### Feature-Based Epics and Vertical Task Flow
+
+To ensure clarity, testability, and incremental delivery, features are organized as vertical epics in GitHub — each representing a specific domain capability (e.g. sorting entrants, viewing medal data, handling errors).
+
+Each epic contains a linear (waterfall) progression of atomic tasks:
+
+1. Setup any additional dependencies or tooling
+2. Write business logic (e.g. Zustand slice, utilities)
+3. Compose UI components (with Storybook support)
+4. Add unit and interaction tests
+5. Add E2E tests (Cypress) if needed
+6. Raise PR and release
+
+This structure enables:
+
+- **Iterative release** — Core functionality can ship early, with enhancements layered in later
+- **Atomic PRs** — Each task delivers clear value and can be reviewed/tested in isolation
+- **Tight alignment with architecture** — Feature folders map 1:1 with epics and their tasks
+- **Parallel progress** — UI, logic, and tests can move forward in small units without waiting for an entire feature to be done
+- **Low technical debt** — Features are validated end-to-end before moving on
+
+This approach mirrors the structure of the file system and promotes maintainability as the app scales.
 
 ---
 
-### Summary of Design Principles
+## Summary of Principles
 
-- 🧠 **Single source of truth**: Zustand holds the entire app state.
-- 🎯 **Domain-driven actions**: UI issues intents, store handles the logic.
-- 📦 **Separation of concerns**: data, logic, and view layers are clearly partitioned.
-- 🔍 **Explicit flows**: No magic, everything traceable and testable.
-- 🔧 **Lean tooling**: All libraries selected for low setup and high clarity.
-
-These decisions result in an architecture that’s fast to build, easy to reason about, and ready for extension.
-
----
+- 🧠 Single source of truth via Zustand
+- 🔧 Business logic lives outside the React tree
+- 🎯 Domain-specific actions avoid leaking implementation into UI
+- 🧱 Feature-based structure reflects product epics and tasks
+- 🧪 Multiple layers of testing for confidence and maintainability
