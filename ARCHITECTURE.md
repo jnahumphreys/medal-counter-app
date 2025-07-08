@@ -121,13 +121,15 @@ interface MedalEntry {
 ```txt
 src/
   features/
-    viewEntrants/
+    entrantsList/
       components/
-        EntrantRow.tsx
-        MedalTableBody.tsx
+        EntrantListItem.tsx
+        EntrantsList.tsx
       logic/
         entrantsSlice.ts
       tests/
+      EntrantListContainer.tsx
+      index.ts
 
     sortEntrants/
       components/
