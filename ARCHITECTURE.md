@@ -125,6 +125,7 @@ src/
       components/
         EntrantListItem.tsx
         EntrantsList.tsx
+        Flag.tsx
       containers/
         EntrantsList.tsx
       logic/
@@ -160,27 +161,40 @@ src/
         (unit tests, etc.)
       index.ts (public API, exports nessesary modules)
 
-    handleErrors/
+    errorFeedback/
       components/
+        ErrorFeedback.tsx
+      containers/
         ErrorFeedback.tsx
       logic/
         errorSlice.ts
       tests/
+        (unit tests, Storybook tests, etc.)
+      index.ts (public API, exports nessesary modules)
 
-  shared/
-    components/
-      AppTitle.tsx
-      Flag.tsx
-    store/
-      useMedalStore.ts
-    types/
-      MedalEntry.ts
-    styles/
-      tailwind.css
+  views/
+    main/
+      components/
+        AppTitle.tsx
+        MainView.tsx
+      containers/
+        MainView.tsx
+      tests/
+        (unit tests, Storybook tests, etc.)
+      index.ts (public API, exports nessesary modules)
+      
+  store/
+    useMedalStore.ts
+
+  types/
+    MedalEntry.ts
+
+  styles/
+    tailwind.css
 
   initApp.ts
   App.tsx
-  main.tsx
+  index.tsx
 ```
 
 ---
