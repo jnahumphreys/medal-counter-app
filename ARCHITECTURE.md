@@ -214,6 +214,34 @@ This project originally followed a flat structure, but was refactored to adopt a
 
 ---
 
+## Component Structure & Naming Convention
+
+To promote clarity and modularity, the application follows a feature-based directory structure. Each feature directory (e.g. `sortEntrants`, `entrantsList`) encapsulates all the related business logic, presentational components, container components, and tests for that domain.
+
+### Presentational vs Container Components
+
+Each feature may define:
+
+- **Presentational Components**: Pure, stateless, and reusable UI components that rely entirely on props. These live in the `components/` subdirectory. They are suitable for isolated rendering in Storybook and do not access application state or side effects directly.
+
+- **Container Components**: Feature-aware components that subscribe to global state (e.g., Zustand) and dispatch actions. These live in the `container/` subdirectory and are responsible for wiring application logic to UI.
+
+This separation ensures that presentation logic remains testable, reusable, and isolated from business logic.
+
+### Naming Convention
+
+We intentionally keep the **same component name** for both the pure and connected versions (e.g. `SortEntrants`) to reflect that they represent the same conceptual UI, just at different levels of abstraction:
+
+- The pure version lives in `components/SortEntrants.tsx`
+- The connected version lives in `container/SortEntrants.tsx`
+- The public feature entrypoint (`index.tsx`) exports the connected version for use in `App.tsx` and other consumers.
+
+This naming strategy allows consumers to treat the feature as a black box, importing from `features/sortEntrants` without needing to understand its internal layering. It also keeps co-located files naturally aligned and reduces mental overhead when navigating between UI and logic.
+
+By adopting this approach, we preserve separation of concerns while maximizing discoverability and composability within each feature.
+
+---
+
 ## Testing Strategy
 
 Testing is performed at multiple layers:
