@@ -125,25 +125,32 @@ src/
       components/
         EntrantListItem.tsx
         EntrantsList.tsx
+      containers/
+        EntrantsList.tsx
       logic/
         entrantsSlice.ts
       tests/
-      EntrantListContainer.tsx
-      index.ts
+        (unit tests, Storybook tests, etc.)
+      index.ts (public API, exports nessesary modules)
 
     sortEntrants/
       components/
-        MedalTableHeader.tsx
-        SortButton.tsx
-        SortByGoldButton.tsx
-        SortBySilverButton.tsx
-        SortByBronzeButton.tsx
-        SortByTotalButton.tsx
+        SortEntrants.tsx
+        SortByMedal.tsx
+        SortByTitle.tsx
+      containers/
+        SortByGold.tsx
+        SortBySilver.tsx
+        SortByBronze.tsx
+        SortByTotal.tsx
+        SortEntrants.tsx
       logic/
         sortSlice.ts
         sortMedals.ts
         useSortedMedals.ts
       tests/
+        (unit tests, Storybook tests, etc.)
+      index.ts (public API, exports nessesary modules)
 
     sortFromQueryParam/
       logic/
